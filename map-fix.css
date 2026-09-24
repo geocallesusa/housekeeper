@@ -1,0 +1,10 @@
+/* Keep the map within its panel at every viewport size. */
+aside { min-width: 0; overflow: hidden; }
+.map { width: 100%; max-width: 100%; }
+.leaflet-container { width: 100% !important; max-width: 100% !important; }
+
+@media (max-width: 1400px) {
+  .content { display: flex; flex-direction: column-reverse; }
+  aside { min-height: 440px; }
+  .map { position: relative; height: 440px; min-height: 440px; }
+}
