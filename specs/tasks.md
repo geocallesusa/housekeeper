@@ -9,6 +9,7 @@ Este archivo refleja el estado de implementación y validación del prototipo.
 - [x] Mostrar el mapa de San Salvador y los proveedores del prototipo cuando no se obtiene la ubicación.
 - [x] Mantener los filtros actuales de fecha y hora y aplicarlos de forma independiente de la entrada de audio.
 - [x] Adaptar la interfaz a Streamlit y documentar la ejecución local.
+- [x] Abrir la pantalla principal directamente, sin inicio de sesión.
 - [x] Dibujar el mapa como un esquema SVG local, sin mosaicos de mapas externos.
 - [x] Solicitar consentimiento antes de mostrar el control de audio y conservar una entrada de texto alternativa.
 - [x] Configurar Vosk con el modelo pequeño de español para transcripción local.
@@ -23,7 +24,7 @@ Este archivo refleja el estado de implementación y validación del prototipo.
 - [x] Verificar que el límite de 15 segundos también se aplica al audio enviado al reconocedor.
 - [x] Compilar los módulos Python modificados.
 - [x] Iniciar Streamlit localmente y comprobar su estado de salud.
-- [x] Comprobar la pantalla tras iniciar sesión y el mensaje de respaldo de San Salvador cuando no se obtiene ubicación.
+- [x] Comprobar la pantalla principal y el mensaje de respaldo de San Salvador cuando no se obtiene ubicación.
 - [x] Comprobar que, sin consentimiento para el micrófono, se muestra la entrada de texto y no el control de audio.
 - [x] Cargar el modelo local de Vosk y ejecutar el flujo de transcripción con un archivo WAV de prueba silencioso.
 

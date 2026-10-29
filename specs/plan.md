@@ -25,7 +25,7 @@ Registrar el enfoque elegido para adaptar el prototipo a Streamlit, implementar 
 
 ## Etapas
 
-1. **Revisar el prototipo y sus datos.** Completado: se reutilizan `PROVIDERS`, las credenciales de demostración y los filtros existentes.
+1. **Revisar el prototipo y sus datos.** Completado: se reutilizan `PROVIDERS` y los filtros existentes; la aplicación Streamlit no requiere inicio de sesión.
 2. **Implementar ubicación y mapa.** Completado: se solicitan las coordenadas del navegador, se aplica el radio inclusivo de 10 km y se conserva el mapa de respaldo de San Salvador.
 3. **Adaptar la aplicación a Streamlit.** Completado para ejecución local. El entorno de alojamiento de producción aún no está especificado.
 4. **Implementar entrada y transcripción de audio.** Completado: consentimiento, entrada alternativa de texto, procesamiento local con Vosk, recorte de audio a 15 segundos y transcripción visible, sin búsqueda por audio.

@@ -2,6 +2,8 @@
 
 Este repositorio contiene un prototipo React + Python para encontrar servicios de limpieza en San Salvador. La adaptación objetivo usa Streamlit y conserva los filtros manuales existentes de fecha y hora.
 
+La aplicación Streamlit abre directamente en la pantalla principal y no requiere inicio de sesión.
+
 ## Requisitos implementados
 
 - Usa la lista existente `PROVIDERS` de `server.py` y muestra los proveedores a 10 km o menos de la ubicación actual del usuario. No inventa proveedores ni fija la ubicación del usuario.
@@ -37,6 +39,6 @@ La ubicación y el micrófono requieren permiso del navegador. En producción, e
 
 ## Prototipo anterior
 
-`server.py` todavía contiene el servidor HTTP del prototipo original. La aplicación adaptada a Streamlit utiliza `streamlit_app.py` y toma de `server.py` los datos `PROVIDERS` y la validación de la sesión de demostración.
+`server.py` todavía contiene el servidor HTTP del prototipo original, incluida su validación de sesión. La aplicación Streamlit no usa el inicio de sesión del prototipo y solo importa de `server.py` la lista `PROVIDERS`.
 
 Consulta [docs/constitution.md](docs/constitution.md) y [specs/](specs/) para el alcance detallado y los criterios de aceptación.

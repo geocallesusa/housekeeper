@@ -18,7 +18,7 @@ from app_helpers import (
     filter_nearby_providers,
     transcribe_wav,
 )
-from server import PROVIDERS, validate_login
+from server import PROVIDERS
 
 SAN_SALVADOR = (13.6929, -89.2182)
 PROVIDER_RADIUS_KM = 10
@@ -52,27 +52,6 @@ def get_vosk_model() -> Model:
 @st.cache_resource
 def load_vosk_model() -> Model:
     return get_vosk_model()
-
-
-def render_login() -> None:
-    st.title("CasaCerca")
-    st.subheader("Inicia sesión")
-    st.write("Accede a los servicios de limpieza y reserva con confianza.")
-
-    with st.form("login_form"):
-        email = st.text_input("Correo electrónico")
-        password = st.text_input("Contraseña", type="password")
-        submitted = st.form_submit_button("Entrar", type="primary")
-
-    if submitted:
-        user = validate_login(email, password)
-        if user is None:
-            st.error("Credenciales incorrectas.")
-        else:
-            st.session_state["user"] = user
-            st.rerun()
-
-    st.caption("Demo: admin@geovany.com / housekeeper123")
 
 
 def render_map(providers: list[dict], latitude: float, longitude: float, has_location: bool) -> None:
@@ -295,20 +274,4 @@ def render_app() -> None:
     render_audio_input()
 
 
-if "user" not in st.session_state:
-    st.session_state["user"] = None
-
-with st.sidebar:
-    st.markdown("## CasaCerca")
-    if st.session_state["user"] is None:
-        st.caption("Inicia sesión para consultar proveedores.")
-    else:
-        st.write(f"Hola, {st.session_state['user']['name']}")
-        if st.button("Cerrar sesión"):
-            st.session_state["user"] = None
-            st.rerun()
-
-if st.session_state["user"] is None:
-    render_login()
-else:
-    render_app()
+render_app()
