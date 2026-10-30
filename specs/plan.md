@@ -15,9 +15,9 @@ Registrar el enfoque elegido para adaptar el prototipo a Streamlit, implementar 
 
 ## Decisiones adoptadas
 
-- La interfaz se implementa en Streamlit y obtiene la ubicación del navegador mediante `streamlit-geolocation`.
+- La interfaz se implementa en Streamlit y obtiene la ubicación del navegador mediante un componente interactivo de Streamlit v2.
 - Si no se obtiene la ubicación, se centra el mapa en San Salvador y se muestran los proveedores del prototipo, como en la experiencia actual.
-- El mapa es un esquema SVG local, sin mosaicos de mapas ni servicios externos.
+- El mapa se presenta con `st.map`, con marcadores para proveedores y la ubicación del usuario, sin dibujar el círculo del radio. Streamlit usa mosaicos de CARTO, por lo que se requiere conexión a Internet.
 - La transcripción utiliza Vosk con el modelo pequeño de español. El modelo se descarga por separado y se carga desde `models\vosk-model-small-es-0.42` o desde la ruta indicada por `VOSK_MODEL_PATH`.
 - El control de audio solo se presenta después de que el usuario marca su consentimiento. Sin consentimiento, queda disponible la entrada de texto alternativa.
 - El audio se procesa en memoria; se descarta todo lo posterior a los primeros 15 segundos. El formulario limpia el control de audio después de enviarlo.

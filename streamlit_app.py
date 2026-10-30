@@ -4,16 +4,13 @@ from __future__ import annotations
 
 import os
 from datetime import date, time
-from html import escape
-import math
 from pathlib import Path
 
+import pandas as pd
 import streamlit as st
-from streamlit_geolocation import streamlit_geolocation
 from vosk import Model
 
 from app_helpers import (
-    distance_km,
     filter_available_providers,
     filter_nearby_providers,
     transcribe_wav,
@@ -38,6 +35,78 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+_LOCATION_BUTTON = st.components.v2.component(
+    "housekeeper.location_button",
+    html="""
+    <button id="location-button" type="button">
+      Presiona aquí para compartir tu ubicación actual
+    </button>
+    """,
+    css="""
+    button {
+      align-items: center;
+      background: var(--st-primary-color, #ff4b4b);
+      border: 1px solid transparent;
+      border-radius: var(--st-button-radius, 0.5rem);
+      color: #fff;
+      cursor: pointer;
+      display: inline-flex;
+      font: 600 14px var(--st-font, sans-serif);
+      justify-content: center;
+      min-height: 2.5rem;
+      padding: 0.5rem 1rem;
+      transition: filter 120ms ease;
+    }
+    button:hover:not(:disabled) {
+      filter: brightness(0.92);
+    }
+    button:focus-visible {
+      outline: 2px solid var(--st-primary-color, #ff4b4b);
+      outline-offset: 2px;
+    }
+    button:disabled {
+      cursor: wait;
+      opacity: 0.75;
+    }
+    """,
+    js="""
+    export default function (component) {
+      const { parentElement, setTriggerValue } = component
+      const button = parentElement.querySelector("#location-button")
+      if (!button) return
+
+      button.onclick = () => {
+        button.disabled = true
+        button.textContent = "Obteniendo ubicación..."
+
+        if (!navigator.geolocation) {
+          setTriggerValue("location", {
+            error: "unsupported",
+            message: "Este navegador no permite obtener la ubicación.",
+          })
+          return
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setTriggerValue("location", {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+            })
+          },
+          (error) => {
+            setTriggerValue("location", {
+              error: error.code,
+              message: error.message,
+            })
+          },
+          { enableHighAccuracy: true, timeout: 10000 },
+        )
+      }
+    }
+    """,
+)
+
 
 def get_vosk_model() -> Model:
     model_path = Path(os.environ.get("VOSK_MODEL_PATH", str(DEFAULT_VOSK_MODEL)))
@@ -55,77 +124,38 @@ def load_vosk_model() -> Model:
 
 
 def render_map(providers: list[dict], latitude: float, longitude: float, has_location: bool) -> None:
-    map_radius_km = PROVIDER_RADIUS_KM
-    if not has_location and providers:
-        map_radius_km = max(
-            distance_km(
-                latitude,
-                longitude,
-                float(provider["lat"]),
-                float(provider["lng"]),
-            )
-            for provider in providers
-        ) * 1.15
-    map_radius_km = max(map_radius_km, 1)
-
-    longitude_scale = 111.32 * max(math.cos(math.radians(latitude)), 0.01)
-    marker_svg = []
+    map_points = []
     for provider in providers:
-        x = 500 + (
-            (float(provider["lng"]) - longitude) * longitude_scale / map_radius_km * 210
-        )
-        y = 280 - (
-            (float(provider["lat"]) - latitude) * 111.32 / map_radius_km * 210
-        )
-        description = escape(
-            f"{provider['name']} · {provider['area']} · ${provider['fee']}/hora"
-        )
-        marker_svg.append(
-            f'<circle cx="{x:.1f}" cy="{y:.1f}" r="9" fill="#e9725b" '
-            f'stroke="#fff" stroke-width="3"><title>{description}</title></circle>'
+        map_points.append(
+            {
+                "lat": float(provider["lat"]),
+                "lng": float(provider["lng"]),
+                "color": "#e9725b",
+                "size": 50,
+            }
         )
 
-    radius_svg = ""
-    user_marker_svg = ""
     if has_location:
-        radius_svg = """
-        <circle cx="500" cy="280" r="210" fill="#2e715d" fill-opacity=".08"
-          stroke="#2e715d" stroke-opacity=".65" stroke-width="2"/>
-        <circle cx="500" cy="280" r="105" fill="none"
-          stroke="#2e715d" stroke-opacity=".25" stroke-dasharray="5 7"/>
-        <text x="712" y="276" class="map-label">10 km</text>
-        """
-        user_marker_svg = """
-        <circle cx="500" cy="280" r="12" fill="#2259b0"
-          stroke="#fff" stroke-width="4"><title>Tu ubicación</title></circle>
-        """
+        map_points.append({
+            "lat": latitude,
+            "lng": longitude,
+            "color": "#2259b0",
+            "size": 120,
+        })
 
-    map_heading = (
-        "Proveedores a 10 km o menos"
-        if has_location
-        else "San Salvador · ubicación de respaldo"
+    st.map(
+        pd.DataFrame(map_points, columns=["lat", "lng", "color", "size"]),
+        latitude="lat",
+        longitude="lng",
+        color="color",
+        size="size",
+        zoom=12 if has_location else 11,
+        height=420,
     )
-    map_svg = f"""
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560"
-      role="img" aria-label="{map_heading}">
-      <style>
-        .map-label {{ font: 600 16px sans-serif; fill: #40544b; }}
-        .map-heading {{ font: 700 20px sans-serif; fill: #20342d; }}
-        .map-legend {{ font: 14px sans-serif; fill: #40544b; }}
-      </style>
-      <rect width="1000" height="560" rx="18" fill="#eaf0e8"/>
-      <path d="M0 140H1000M0 280H1000M0 420H1000M250 0V560M500 0V560M750 0V560"
-        stroke="#fff" stroke-opacity=".7" stroke-width="2"/>
-      <text x="40" y="48" class="map-heading">{escape(map_heading)}</text>
-      {radius_svg}
-      {''.join(marker_svg)}
-      {user_marker_svg}
-      <circle cx="44" cy="510" r="8" fill="#e9725b"/>
-      <text x="62" y="515" class="map-legend">Profesionales</text>
-      {'<circle cx="220" cy="510" r="8" fill="#2259b0"/><text x="238" y="515" class="map-legend">Tu ubicación</text>' if has_location else ''}
-    </svg>
-    """
-    st.iframe(map_svg, height=380)
+    if has_location:
+        st.caption("Puntos coral: proveedores cercanos. Punto azul: tu ubicación.")
+    else:
+        st.caption("Puntos coral: proveedores del prototipo en San Salvador.")
 
 
 def render_audio_input() -> None:
@@ -186,13 +216,24 @@ def render_app() -> None:
     st.markdown("Encuentra servicios de limpieza para tu hogar.")
 
     st.subheader("Ubicación")
-    st.caption("Presiona el botón de ubicación para compartir tu posición actual.")
-    location = streamlit_geolocation()
+    location_result = _LOCATION_BUTTON(
+        key="location_button",
+        on_location_change=lambda: None,
+    ).location
+    location = (
+        location_result
+        if isinstance(location_result, dict)
+        else None
+    )
+    location_error = location.get("error") if location else None
     has_location = (
         isinstance(location, dict)
         and isinstance(location.get("latitude"), (int, float))
         and isinstance(location.get("longitude"), (int, float))
+        and not location_error
     )
+
+    render_audio_input()
 
     if has_location:
         latitude = float(location["latitude"])
@@ -211,10 +252,13 @@ def render_app() -> None:
     else:
         latitude, longitude = SAN_SALVADOR
         geo_providers = list(PROVIDERS)
-        st.info(
-            "No se obtuvo la ubicación. Se muestra el mapa actual de San Salvador "
-            "con los proveedores del prototipo."
-        )
+        if location_error:
+            st.info(
+                "No se obtuvo la ubicación. Se muestra el mapa actual de San Salvador "
+                "con los proveedores del prototipo."
+            )
+        else:
+            st.caption("Comparte tu ubicación para ver los proveedores cercanos.")
 
     with st.form("availability_filters"):
         date_column, time_column = st.columns(2)
@@ -271,7 +315,5 @@ def render_app() -> None:
                     st.markdown(f"**${provider['fee']}/hora**")
 
     st.divider()
-    render_audio_input()
-
 
 render_app()

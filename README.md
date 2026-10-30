@@ -8,7 +8,7 @@ La aplicación Streamlit abre directamente en la pantalla principal y no requier
 
 - Usa la lista existente `PROVIDERS` de `server.py` y muestra los proveedores a 10 km o menos de la ubicación actual del usuario. No inventa proveedores ni fija la ubicación del usuario.
 - Solicita permiso de ubicación. Si se deniega o no se obtiene la ubicación, muestra el mapa actual de San Salvador.
-- Dibuja el mapa como un esquema SVG local, sin solicitar mosaicos a un servicio externo.
+- Muestra un mapa geográfico real con marcadores para los proveedores y, cuando está disponible, la ubicación del usuario. No dibuja un círculo de 10 km. Los mosaicos del mapa los sirve CARTO y requieren conexión a Internet.
 - Conserva los filtros manuales de fecha y hora. La entrada y transcripción de audio no los activan, reemplazan ni modifican.
 - Ofrece entrada de audio mediante micrófono, con consentimiento explícito; solo considera los primeros 15 segundos para la transcripción y descarta el contenido posterior.
 - Indica que el audio debe incluir referencia del lugar, fecha y hora. Acepta audio en español sin validar el idioma.
@@ -19,7 +19,7 @@ La aplicación Streamlit abre directamente en la pantalla principal y no requier
 
 ## Preparación local
 
-Se requiere Python 3.10 o posterior. En PowerShell, crea y activa un entorno virtual e instala las dependencias:
+Se requiere Python 3.10 o posterior y Streamlit 1.50 o posterior. En PowerShell, crea y activa un entorno virtual e instala las dependencias:
 
 ```powershell
 py -m venv .venv
@@ -29,10 +29,12 @@ python -m pip install -r requirements.txt
 
 Descarga el modelo pequeño de español de Vosk desde la [lista oficial de modelos](https://alphacephei.com/vosk/models) y extrae el directorio `vosk-model-small-es-0.42` en `models\vosk-model-small-es-0.42`. El modelo no se incluye en el repositorio. También puedes indicar su ubicación mediante la variable de entorno `VOSK_MODEL_PATH`.
 
-Inicia la aplicación:
+## Ejecutar desde la terminal de Visual Studio Code
+
+Abre la carpeta del proyecto en Visual Studio Code y selecciona **Terminal > Nueva terminal**. Asegúrate de que la terminal esté ubicada en la carpeta `housekeeper`. Después de completar la preparación local, ejecuta:
 
 ```powershell
-streamlit run streamlit_app.py
+.\.venv\Scripts\python.exe -m streamlit run streamlit_app.py
 ```
 
 La ubicación y el micrófono requieren permiso del navegador. En producción, el sitio debe servirse mediante HTTPS; `localhost` es válido para desarrollo local.

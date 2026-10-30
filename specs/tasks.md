@@ -10,7 +10,7 @@ Este archivo refleja el estado de implementación y validación del prototipo.
 - [x] Mantener los filtros actuales de fecha y hora y aplicarlos de forma independiente de la entrada de audio.
 - [x] Adaptar la interfaz a Streamlit y documentar la ejecución local.
 - [x] Abrir la pantalla principal directamente, sin inicio de sesión.
-- [x] Dibujar el mapa como un esquema SVG local, sin mosaicos de mapas externos.
+- [x] Mostrar un mapa geográfico real con marcadores de proveedores y ubicación del usuario, sin dibujar el círculo del radio.
 - [x] Solicitar consentimiento antes de mostrar el control de audio y conservar una entrada de texto alternativa.
 - [x] Configurar Vosk con el modelo pequeño de español para transcripción local.
 - [x] Considerar únicamente los primeros 15 segundos para la transcripción y descartar el contenido posterior.
