@@ -38,7 +38,8 @@ def _crear_componentes_rag():
     """Construye el modelo, el recuperador y el prompt cuando se necesitan."""
     if not load_key():
         raise RuntimeError(
-            "Configura GEMINI_API_KEY en el archivo .env o como variable de entorno."
+            "Configura GEMINI_API_KEY en .streamlit/secrets.toml, en .env "
+            "o como variable de entorno."
         )
 
     from langchain_chroma import Chroma
