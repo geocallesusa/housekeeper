@@ -4,6 +4,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+import streamlit as st
 
 from server import PROVIDERS
 
@@ -20,7 +21,14 @@ def load_key() -> str | None:
 
     env_path = Path(__file__).resolve().with_name(".env")
     load_dotenv(dotenv_path=env_path, override=False)
-    clave = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+
+
+    clave = (
+        st.secrets.get("GEMINI_API_KEY")
+        or st.secrets.get("GOOGLE_API_KEY")
+        or os.environ.get("GEMINI_API_KEY")
+        or os.environ.get("GOOGLE_API_KEY")
+    )
     if clave:
         os.environ["GOOGLE_API_KEY"] = clave
     return clave
