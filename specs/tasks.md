@@ -11,16 +11,17 @@ Este archivo refleja el estado de implementación y validación del prototipo.
 - [x] Adaptar la interfaz a Streamlit y documentar la ejecución local.
 - [x] Abrir la pantalla principal directamente, sin inicio de sesión.
 - [x] Mostrar un mapa geográfico real con marcadores de proveedores y ubicación del usuario, sin dibujar el círculo del radio.
-- [x] Solicitar consentimiento antes de mostrar el control de audio y conservar una entrada de texto alternativa.
+- [x] Solicitar consentimiento antes de grabar con el micrófono y permitir subir WAV sin acceder al micrófono.
 - [x] Configurar Vosk con el modelo pequeño de español para transcripción local.
 - [x] Considerar únicamente los primeros 15 segundos para la transcripción y descartar el contenido posterior.
-- [x] Mostrar la transcripción sin usarla para buscar, filtrar ni seleccionar proveedores.
-- [x] Procesar el audio en memoria y limpiar el control después de enviar el formulario.
+- [x] Mostrar la transcripción y consultar el RAG existente cuando falta fecha o hora, sin modificar filtros ni mapa.
+- [x] Procesar el audio en memoria y conservarlo únicamente durante la sesión necesaria para enviar la búsqueda.
 - [x] Mostrar errores de coordenadas, audio o carga del modelo en la interfaz.
 
 ## Validación completada
 
 - [x] Ejecutar las pruebas automatizadas de ubicación, distancia, filtros de disponibilidad y preparación del audio.
+- [x] Verificar la selección entre búsqueda habitual, búsqueda RAG alternativa y aviso cuando faltan datos.
 - [x] Verificar que el límite de 15 segundos también se aplica al audio enviado al reconocedor.
 - [x] Compilar los módulos Python modificados.
 - [x] Iniciar Streamlit localmente y comprobar su estado de salud.

@@ -9,12 +9,12 @@ La aplicación Streamlit abre directamente en la pantalla principal y no requier
 - Usa la lista existente `PROVIDERS` de `server.py` y muestra los proveedores a 10 km o menos de la ubicación actual del usuario. No inventa proveedores ni fija la ubicación del usuario.
 - Solicita permiso de ubicación. Si se deniega o no se obtiene la ubicación, muestra el mapa actual de San Salvador.
 - Muestra un mapa geográfico real con marcadores para los proveedores y, cuando está disponible, la ubicación del usuario. No dibuja un círculo de 10 km. Los mosaicos del mapa los sirve CARTO y requieren conexión a Internet.
-- Conserva los filtros manuales de fecha y hora. La entrada y transcripción de audio no los activan, reemplazan ni modifican.
-- Ofrece entrada de audio mediante micrófono, con consentimiento explícito; solo considera los primeros 15 segundos para la transcripción y descarta el contenido posterior.
+- Conserva sin cambios la búsqueda por fecha y hora cuando ambos campos están completos. Si falta alguno, permite buscar con el RAG existente a partir de la transcripción, sin modificar los filtros ni el mapa.
+- Permite subir un WAV o grabar audio con consentimiento explícito; solo considera los primeros 15 segundos para transcribir y descarta el contenido posterior.
 - Indica que el audio debe incluir referencia del lugar, fecha y hora. Acepta audio en español sin validar el idioma.
-- Transcribe localmente con Vosk y muestra el texto reconocido. La transcripción no ejecuta búsquedas.
-- No guarda el audio en archivos ni lo conserva después de enviar el formulario. La captura se limita a la sesión de Streamlit.
-- Si no se concede permiso al micrófono, permite ingresar texto en el campo alternativo.
+- Transcribe localmente con Vosk y muestra el texto reconocido. Si falta fecha u hora, consulta el RAG existente y muestra su respuesta separada.
+- No guarda el audio en archivos; permanece solo en la sesión de Streamlit para poder enviarlo en la búsqueda.
+- Sin permiso del micrófono, no graba audio; permite subir un archivo WAV.
 - Usa bibliotecas de código abierto.
 
 ## Preparación local
@@ -38,6 +38,21 @@ Abre la carpeta del proyecto en Visual Studio Code y selecciona **Terminal > Nue
 ```
 
 La ubicación y el micrófono requieren permiso del navegador. En producción, el sitio debe servirse mediante HTTPS; `localhost` es válido para desarrollo local.
+
+## Módulo RAG experimental
+
+`rag_app.py` contiene la cadena RAG utilizada como alternativa solo cuando falta la fecha o la hora. Usa la lista existente `PROVIDERS` y Gemini; la consulta envía texto a la API de Google. La respuesta y las proveedoras recuperadas se muestran en una sección separada, sin alterar los filtros manuales ni el mapa. El flujo de disponibilidad por fecha y hora no usa RAG.
+
+Instala sus dependencias adicionales con `python -m pip install -r requirements-rag.txt`. `rag_app.py` lee `GEMINI_API_KEY` desde `.env` o desde una variable de entorno. Usa `.env.example` solo como plantilla, con un marcador de posición, nunca para guardar una clave real. Después, crea e invoca la cadena desde otro módulo:
+
+```python
+from rag_app import crear_cadena_rag
+
+cadena_rag = crear_cadena_rag()
+respuesta = cadena_rag.invoke("¿Quién ofrece limpieza general?")
+```
+
+La cadena se construye al llamar a `crear_cadena_rag`, no al importar el módulo. La dependencia con Gemini se mantiene separada de `requirements.txt` para no añadirla a la instalación normal de CasaCerca.
 
 ## Prototipo anterior
 

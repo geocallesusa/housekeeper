@@ -12,8 +12,6 @@ from typing import Any, Iterable
 EARTH_RADIUS_KM = 6371.0088
 MAX_AUDIO_SECONDS = 15
 WEEKDAYS = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-
-
 def _validate_coordinates(latitude: float, longitude: float) -> None:
     if not math.isfinite(latitude) or not -90 <= latitude <= 90:
         raise ValueError("La latitud debe estar entre -90 y 90 grados.")

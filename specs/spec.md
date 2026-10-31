@@ -8,7 +8,7 @@ CasaCerca conecta a las personas que necesitan servicios de limpieza para su hog
 
 La aplicación adaptará el prototipo existente para presentar en un mapa los proveedores cercanos de `PROVIDERS`, prepararse para Streamlit y aceptar audio en la pantalla principal con transcripción visible.
 
-La transcripción es únicamente una salida informativa en esta etapa. No debe activar ni ejecutar una búsqueda.
+La búsqueda existente por fecha y hora permanece sin cambios cuando ambos campos están completos. Si falta uno o ambos, el usuario puede proporcionar audio para transcribirlo y consultar el RAG existente; la transcripción no modifica los campos manuales ni los resultados del mapa.
 
 ## 3. Requisitos funcionales
 
@@ -50,21 +50,21 @@ Antes o durante la captura, la interfaz debe informar que solo se consideran los
 
 La aplicación debe mostrar en texto lo que se reconoce del audio ingresado.
 
-### RF-09. Sin búsqueda por audio
+### RF-09. Búsqueda RAG alternativa con audio
 
-La transcripción no debe utilizarse para buscar, filtrar, ordenar ni seleccionar proveedores. La búsqueda por audio queda expresamente fuera de esta etapa.
+Si falta la fecha o la hora al enviar la búsqueda de disponibilidad, la aplicación debe usar el audio disponible para obtener una transcripción y consultar la cadena RAG existente. La respuesta y las proveedoras recuperadas como contexto se muestran en una sección separada y no cambian los filtros ni los resultados del mapa.
 
 ### RF-10. Conservar los filtros actuales
 
-La aplicación debe conservar los filtros actuales de fecha y hora para buscar proveedores. La entrada de audio y su transcripción no deben activar, reemplazar ni modificar dichos filtros. El uso de los filtros existentes debe seguir funcionando independientemente de la entrada de audio.
+La aplicación debe conservar sin cambios el flujo actual de búsqueda por fecha y hora cuando ambos campos estén completos. El audio y su transcripción nunca deben activar, reemplazar ni modificar esos filtros.
 
 ### RF-11. Consentimiento para el micrófono
 
 La aplicación debe solicitar el consentimiento del usuario antes de acceder al micrófono.
 
-### RF-12. Entrada de texto si no hay permiso para el micrófono
+### RF-12. Subida de archivo si no hay permiso para el micrófono
 
-Si el usuario no concede permiso para acceder al micrófono, la aplicación debe permitir únicamente el ingreso de texto en el campo de entrada. No debe acceder al micrófono ni capturar audio sin consentimiento.
+Si el usuario no concede permiso para acceder al micrófono, la aplicación no debe grabar audio. Puede subir un archivo WAV, ya que esa acción no accede al micrófono.
 
 ### RF-13. Idioma del audio
 
@@ -90,11 +90,11 @@ Las bibliotecas utilizadas para implementar estos requisitos deben ser de códig
 8. La interfaz solicita que se mencione una referencia del lugar, la fecha y la hora.
 9. El contenido posterior a los primeros 15 segundos no afecta el texto transcrito.
 10. El texto reconocido se muestra al usuario.
-11. La transcripción no inicia una búsqueda ni cambia los resultados.
-12. Los filtros actuales de fecha y hora siguen disponibles y funcionando para buscar proveedores.
-13. La entrada de audio y su transcripción no activan ni modifican los filtros actuales.
+11. Cuando fecha y hora están completas, la búsqueda existente por disponibilidad conserva su comportamiento.
+12. Si falta la fecha o la hora, el audio disponible se transcribe y se consulta con el RAG existente.
+13. La respuesta RAG y las proveedoras recuperadas se muestran por separado y no modifican los campos de fecha/hora ni los resultados del mapa.
 14. Se solicita consentimiento antes de acceder al micrófono.
-15. Si el usuario no concede permiso al micrófono, solo puede ingresar texto en el campo de entrada y no se captura audio.
+15. Si el usuario no concede permiso al micrófono, no se graba audio; puede subir un archivo WAV.
 16. El audio se procesa como audio en español, sin validación automática de idioma.
 17. El audio no se persiste y, al recargar la página, ya no está disponible.
 18. Las bibliotecas utilizadas son de código abierto y no propietarias.
@@ -104,10 +104,10 @@ Las bibliotecas utilizadas para implementar estos requisitos deben ser de códig
 - Los proveedores de referencia son los definidos en `PROVIDERS` en `server.py`; se muestran únicamente si están a 10 kilómetros o menos del usuario.
 - Se deben conservar los filtros actuales de fecha y hora para la búsqueda de proveedores; el audio y su transcripción no deben activar ni modificar esos filtros.
 - Para la transcripción se consideran como máximo los primeros 15 segundos; cualquier contenido posterior se descarta.
-- En esta etapa, el resultado del audio se limita a su transcripción visible.
+- Si falta la fecha o la hora, el texto transcrito se utiliza únicamente como consulta al RAG existente y la respuesta se muestra separada.
 - Se debe solicitar permiso para acceder a la ubicación; si no se concede, se carga el mapa actual de San Salvador.
 - El usuario debe consentir antes de que la aplicación acceda al micrófono.
-- Si no se concede permiso al micrófono, solo se permite el ingreso de texto en el campo de entrada.
+- Si no se concede permiso al micrófono, no se graba audio. La subida de archivos WAV no usa el micrófono.
 - El audio esperado es español y no se debe validar su idioma.
 - El audio no debe almacenarse; recargar la página debe borrar el audio previamente ingresado.
 - Solo se permiten bibliotecas de código abierto.

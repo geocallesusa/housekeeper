@@ -158,57 +158,92 @@ def render_map(providers: list[dict], latitude: float, longitude: float, has_loc
         st.caption("Puntos coral: proveedores del prototipo en San Salvador.")
 
 
-def render_audio_input() -> None:
+def render_provider_cards(providers: list[dict]) -> None:
+    for provider in providers:
+        with st.container(border=True):
+            image_column, details_column, price_column = st.columns([1, 5, 1])
+            with image_column:
+                st.image(provider["photo"], width=72)
+            with details_column:
+                st.markdown(f"**{provider['name']}** · ★ {provider['rating']}")
+                st.write(
+                    f"{provider['area']} · {' · '.join(provider['services'])}"
+                )
+                st.caption(
+                    f"Disponible {', '.join(provider['days'])} · "
+                    f"{provider['start']}–{provider['end']}"
+                )
+            with price_column:
+                st.markdown(f"**${provider['fee']}/hora**")
+
+
+def transcribe_audio(audio_bytes: bytes) -> str | None:
+    try:
+        return transcribe_wav(audio_bytes, load_vosk_model())
+    except FileNotFoundError as error:
+        st.error(str(error))
+    except ValueError as error:
+        st.error(f"No se pudo procesar el audio: {error}")
+    except (OSError, RuntimeError) as error:
+        st.error(f"No se pudo cargar el modelo local de transcripción: {error}")
+    return None
+
+
+def render_audio_input() -> bytes | None:
     st.subheader("Entrada por audio")
-    st.caption(
-        "La transcripción solo considera los primeros 15 segundos; el contenido "
-        "posterior se descarta. Menciona una referencia del lugar, la fecha y la "
-        "hora. El audio se usa solo para mostrar su transcripción; no inicia una búsqueda."
-    )
-    st.text_input(
-        "Entrada de texto alternativa",
-        key="text_search_input",
-        help="Si no concedes permiso al micrófono, puedes ingresar texto aquí.",
-    )
 
     microphone_consent = st.checkbox(
         "Doy permiso para usar el micrófono.",
         key="microphone_consent",
     )
-    if not microphone_consent:
-        st.info("Sin este permiso, solo está disponible la entrada de texto.")
-        return
+    st.caption(
+        "La transcripción solo considera los primeros 15 segundos; el contenido "
+        "posterior se descarta. Menciona una referencia del lugar, la fecha y la "
+        "hora. Si falta la fecha o la hora, la transcripción se consulta con el "
+        "buscador RAG."
+    )
 
-    with st.form("audio_form", clear_on_submit=True):
-        audio = st.audio_input(
+    st.markdown(
+        """
+        <style>
+        div[role="radiogroup"] label p {
+            color: gray !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    input_mode = st.radio(
+        "Cómo ingresar el audio",
+        ("Subir archivo WAV", "Grabar con el micrófono"),
+        horizontal=True,
+        key="audio_input_mode",
+    )
+    audio_bytes = None
+    if input_mode == "Subir archivo WAV":
+        uploaded_audio = st.file_uploader(
+            "Selecciona un archivo WAV",
+            type=["wav"],
+            key="uploaded_audio",
+        )
+        if uploaded_audio is not None:
+            audio_bytes = uploaded_audio.getvalue()
+    elif microphone_consent:
+        recorded_audio = st.audio_input(
             "Graba un audio para transcribirlo",
             sample_rate=16000,
+            key="recorded_audio",
         )
-        submitted = st.form_submit_button("Transcribir audio")
+        if recorded_audio is not None:
+            audio_bytes = recorded_audio.getvalue()
+    else:
+        st.info("Concede permiso para usar el micrófono. En el checkbox de arriba")
 
-    if not submitted:
-        return
-    if audio is None:
-        st.warning("Graba un audio antes de solicitar la transcripción.")
-        return
-
-    try:
-        transcript = transcribe_wav(audio.getvalue(), load_vosk_model())
-    except FileNotFoundError as error:
-        st.error(str(error))
-        return
-    except ValueError as error:
-        st.error(f"No se pudo procesar el audio: {error}")
-        return
-    except (OSError, RuntimeError) as error:
-        st.error(f"No se pudo cargar el modelo local de transcripción: {error}")
-        return
-
+    transcript = st.session_state.get("audio_transcript")
     if transcript:
         st.markdown("**Transcripción del audio**")
         st.write(transcript)
-    else:
-        st.info("No se reconocieron palabras en los primeros 15 segundos.")
+    return audio_bytes
 
 
 def render_app() -> None:
@@ -233,7 +268,7 @@ def render_app() -> None:
         and not location_error
     )
 
-    render_audio_input()
+    audio_bytes = render_audio_input()
 
     if has_location:
         latitude = float(location["latitude"])
@@ -252,13 +287,6 @@ def render_app() -> None:
     else:
         latitude, longitude = SAN_SALVADOR
         geo_providers = list(PROVIDERS)
-        if location_error:
-            st.info(
-                "No se obtuvo la ubicación. Se muestra el mapa actual de San Salvador "
-                "con los proveedores del prototipo."
-            )
-        else:
-            st.caption("Comparte tu ubicación para ver los proveedores cercanos.")
 
     with st.form("availability_filters"):
         date_column, time_column = st.columns(2)
@@ -281,9 +309,50 @@ def render_app() -> None:
     if "availability_searched" not in st.session_state:
         st.session_state["availability_searched"] = False
     if search_submitted:
-        st.session_state["availability_searched"] = True
-        st.session_state["availability_date"] = selected_date
-        st.session_state["availability_time"] = selected_time
+        st.session_state.pop("audio_rag_answer", None)
+        st.session_state.pop("audio_rag_providers", None)
+        if selected_date is not None and selected_time is not None:
+            st.session_state["availability_searched"] = True
+            st.session_state["availability_date"] = selected_date
+            st.session_state["availability_time"] = selected_time
+        elif audio_bytes is None:
+            st.warning(
+                "Completa la fecha y la hora, o sube un archivo WAV / graba un "
+                "audio para buscar con RAG."
+            )
+        else:
+            transcript = transcribe_audio(audio_bytes)
+            if transcript == "":
+                st.info("No se reconocieron palabras en los primeros 15 segundos.")
+            elif transcript is not None:
+                st.session_state["audio_transcript"] = transcript
+                st.markdown("**Transcripción usada para esta búsqueda**")
+                st.write(transcript)
+                try:
+                    from google.genai.errors import APIError
+                    from langchain_google_genai.chat_models import (
+                        GoogleGenerativeAIError,
+                    )
+                    from rag_app import buscar_resultados_con_rag
+
+                    rag_result = buscar_resultados_con_rag(transcript)
+                    st.session_state["audio_rag_answer"] = rag_result.answer
+                    st.session_state["audio_rag_providers"] = rag_result.providers
+                except (ImportError, RuntimeError, ValueError) as error:
+                    st.error(f"No se pudo ejecutar la búsqueda RAG: {error}")
+                except (APIError, GoogleGenerativeAIError) as error:
+                    st.error(f"Gemini no pudo completar la búsqueda RAG: {error}")
+
+    if st.session_state.get("audio_rag_answer"):
+        st.subheader("Resultados de la búsqueda por audio")
+        st.write(st.session_state["audio_rag_answer"])
+    if "audio_rag_providers" in st.session_state:
+        rag_providers = st.session_state["audio_rag_providers"]
+        st.subheader("Proveedoras relacionadas con tu búsqueda por audio")
+        if rag_providers:
+            render_provider_cards(rag_providers)
+        else:
+            st.info("El RAG no recuperó proveedoras para mostrar.")
 
     if st.session_state["availability_searched"]:
         geo_providers = filter_available_providers(
@@ -292,28 +361,14 @@ def render_app() -> None:
             st.session_state.get("availability_time"),
         )
 
-    st.subheader(f"{len(geo_providers)} profesionales disponibles")
+    st.subheader(f"{len(geo_providers)} proveedores disponibles")
     render_map(geo_providers, latitude, longitude, has_location)
     if not geo_providers:
         st.info("No hay proveedores disponibles en esta ubicación y horario.")
     else:
-        for provider in geo_providers:
-            with st.container(border=True):
-                image_column, details_column, price_column = st.columns([1, 5, 1])
-                with image_column:
-                    st.image(provider["photo"], width=72)
-                with details_column:
-                    st.markdown(f"**{provider['name']}** · ★ {provider['rating']}")
-                    st.write(
-                        f"{provider['area']} · {' · '.join(provider['services'])}"
-                    )
-                    st.caption(
-                        f"Disponible {', '.join(provider['days'])} · "
-                        f"{provider['start']}–{provider['end']}"
-                    )
-                with price_column:
-                    st.markdown(f"**${provider['fee']}/hora**")
+        render_provider_cards(geo_providers)
 
     st.divider()
+
 
 render_app()

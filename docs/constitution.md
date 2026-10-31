@@ -18,11 +18,11 @@ Adaptar la solución actual para cumplir con los siguientes requisitos:
 
 - **Permitir búsquedas por audio.** Incluir en la pantalla principal un campo compatible con Streamlit que permita ingresar una búsqueda mediante el micrófono. El audio tendrá una duración máxima de 15 segundos; cualquier contenido posterior deberá ignorarse. Se debe informar este límite al usuario e indicarle que incluya en esos 15 segundos una referencia del lugar donde necesita el servicio, así como la fecha y la hora.
 
-- **Limitar la funcionalidad inicial del audio.** Por ahora, no desarrollar la búsqueda por audio. Solo permitir que el usuario ingrese el audio y mostrar en texto lo que se escuche.
+- **Búsqueda alternativa por audio.** Conservar la búsqueda actual cuando se indiquen fecha y hora. Si falta cualquiera de esos datos, permitir que el usuario suba un archivo WAV o grabe audio con consentimiento; transcribirlo localmente y consultar el RAG existente. Mostrar la respuesta sin modificar los filtros ni los resultados del mapa.
 
 - **Conservar los filtros actuales.** Mantener los filtros existentes de fecha y hora para buscar proveedores. La entrada de audio y su transcripción no deben activar ni modificar esos filtros.
 
-- **Solicitar permiso para usar el micrófono.** Pedir el consentimiento del usuario antes de acceder al micrófono. Si no concede el permiso, permitir únicamente el ingreso de texto en el campo de entrada.
+- **Solicitar permiso para usar el micrófono.** Pedir el consentimiento del usuario antes de acceder al micrófono. Sin permiso, no grabar audio; se permite subir un archivo WAV, que no accede al micrófono.
 
 - **Aceptar audio en español.** El audio será en español. No se debe implementar validación del idioma.
 
